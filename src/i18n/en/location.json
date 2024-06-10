@@ -1,0 +1,6 @@
+{
+  "errors": {
+    "not_found": "Location not found",
+    "photo_not_found": "Location doesn't have any photo"
+  }
+}

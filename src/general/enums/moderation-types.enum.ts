@@ -1,0 +1,13 @@
+/* Classifier 31*/
+export enum ModerationType {
+  INITIAL_PROFILE_NAME = -1,
+  INITIAL_PROFILE_PHOTO = -2,
+  INITIAL_VEHICLE = -3,
+  INITIAL_TIRES = -4,
+  INITIAL_VEHICLE_PHOTO = -5,
+  PROFILE_NAME = 1,
+  PROFILE_PHOTO = 2,
+  VEHICLE = 3,
+  TIRES = 4,
+  VEHICLE_PHOTO = 5,
+}

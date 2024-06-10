@@ -1,0 +1,160 @@
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { RaceType } from 'general/enums/race-types.enum';
+import { Translations } from 'general/interfaces/translations.interface';
+import { enumToString } from 'general/utils/enum-to-string.utils';
+import { getTranslation } from 'general/utils/translation.utils';
+import { GetEventResultsQueryDtoV2 } from '../../../event/v2/dto/get-event-results.dto';
+
+export class GetLocationConfigResultsQueryDtoV2 extends OmitType(GetEventResultsQueryDtoV2, ['type']) {
+  @ApiProperty({
+    description: `Race type: ${enumToString(RaceType)}`,
+    enum: RaceType,
+  })
+  @Transform(({ value }) => value && +value)
+  @IsEnum(RaceType)
+  c_race_type: RaceType;
+
+  @ApiPropertyOptional({
+    description: 'Event year',
+  })
+  @Transform(({ value }) => value && +value)
+  @IsInt()
+  @IsOptional()
+  year?: number;
+
+  @ApiPropertyOptional({
+    description: 'Number of records',
+  })
+  @Transform(({ value }) => value && +value)
+  @IsInt()
+  @IsOptional()
+  @Max(100)
+  @Min(1)
+  count?: number;
+
+  @ApiPropertyOptional({
+    description: 'Road condition (code)',
+  })
+  @Transform(({ value }) => value && +value)
+  @IsInt()
+  @IsOptional()
+  c_road_condition?: number;
+}
+
+@Exclude()
+export class GetTimeAttackResultDriverResponseDtoV2 {
+  constructor(partial: Partial<GetTimeAttackResultDriverResponseDtoV2>) {
+    Object.assign(this, partial);
+  }
+}
+
+export class GetLocationConfigTimeAttackResultsResponseDtoV2 {
+  @Expose()
+  @ApiProperty({
+    description: 'Driver ID',
+    type: 'number',
+  })
+  driver_id: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Vehicle ID',
+    type: 'number',
+  })
+  vehicle_id: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Driver first name',
+    type: 'string',
+  })
+  @Transform(({ value, obj }) => getTranslation(value, obj.i18n?.lang))
+  first_name: Translations;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Driver last name',
+    type: 'string',
+  })
+  @Transform(({ value, obj }) => getTranslation(value, obj.i18n?.lang))
+  last_name: Translations;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Vehicle name',
+    type: 'string',
+  })
+  vehicle_name: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Tires name',
+    type: 'string',
+  })
+  tires_name: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Lap number',
+  })
+  lap_number: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Lap time',
+  })
+  @Transform(({ value }) => value && value.padEnd(9, '0'))
+  lap_time: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Best result',
+  })
+  best_result: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Penalty time (seconds)',
+  })
+  @Transform(({ value }) => Number(value))
+  penalty_time: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Canceled',
+  })
+  @Transform(({ value }) => Boolean(value))
+  canceled: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Road condition (code)',
+  })
+  c_road_condition: number;
+
+  @Expose()
+  @ApiPropertyOptional({
+    description: 'Vehicle power density class ID (for time-attack events)',
+  })
+  power_den_class_id?: number;
+
+  constructor(partial: Partial<GetLocationConfigTimeAttackResultsResponseDtoV2>) {
+    Object.assign(this, partial);
+  }
+}
+
+export class GetLocationConfigDragRaceResultsResponseDtoV2 extends GetLocationConfigTimeAttackResultsResponseDtoV2 {
+  @Expose()
+  @ApiProperty({
+    description: 'Lap time',
+  })
+  @Transform(({ value }) => value && value.substring(0, 6))
+  lap_time: string;
+
+  constructor(partial: Partial<GetLocationConfigDragRaceResultsResponseDtoV2>) {
+    super(partial);
+    Object.assign(this, partial);
+  }
+}

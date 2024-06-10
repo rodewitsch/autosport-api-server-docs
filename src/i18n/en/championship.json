@@ -1,0 +1,7 @@
+{
+  "errors": {
+    "not_found": "Championship not found",
+    "rules_not_found": "Championship rules not found",
+    "image_not_found": "Championship doesn't have any image"
+  }
+}

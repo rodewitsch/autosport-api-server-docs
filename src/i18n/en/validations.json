@@ -1,0 +1,8 @@
+{
+  "not_be_empty": "{property} should not be empty",
+  "email_must_be_email": "Email must be a valid email address",
+  "must_be_string": "{property} must be a string",
+  "must_be_integer": "{property} must be an integer",
+  "must_be_number": "{property} must_be_number",
+  "min_value": "{property} must be greater than or equal to {constraints.0}"
+}

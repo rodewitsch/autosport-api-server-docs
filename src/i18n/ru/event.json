@@ -1,0 +1,27 @@
+{
+  "errors": {
+    "not_found": "Событие не найдено",
+    "image_not_found": "У события нет изображения",
+    "registration_unavailable": "Регистрация на это событие недоступна",
+    "not_registered": "Вы не зарегистрированы на это событие",
+    "already_registered": "Вы уже зарегистрированы на это событие",
+    "missed_documents": "Вы должны загрузить все необходимые документы для регистрации на это событие",
+    "rules_not_found": "Правила события не найдены",
+    "wrong_classes": "Вы выбрали неверные классы для регистрации на это событие",
+    "no_classes": "Вы не выбрали классы для регистрации на это событие",
+    "event_finished": "Событие уже завершено",
+    "status_cant_be_changed": "Статус события не может быть изменен",
+    "road_condition_cant_be_changed": "Состояние трассы не может быть изменено",
+    "status_already_set": "Статус события уже установлен",
+    "event_member_not_found": "Участник события не найден",
+    "event_started_registration_can_not_be_changed": "Событие началось, регистрация не может быть изменена",
+    "event_finished_registration_can_not_be_changed": "Событие завершилось, регистрация не может быть изменена",
+    "start_num_exists": "Стартовый номер уже занят. Проверьте правильность введенного номера или используйте номер регистрационного знака"
+  },
+  "mail": {
+    "organizer_notification": {
+      "subject": "Регистрация на событие {event_name} {event_date}",
+      "text": "Событие: {event_name}\nДата проведения: {event_date}\nТип гонки: {race_type}\nУчастник: {driver_last_name} {driver_first_name}\nEmail: {driver_email}\nНомер телефона: {driver_phone_number}\nКлассы: {driver_classes}\n\nС уважением,\nкоманда RaceLane"
+    }
+  }
+}

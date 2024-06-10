@@ -1,0 +1,7 @@
+{
+  "errors": {
+    "not_found": "Tires not found",
+    "is_event_member": "Tires is linked with events. You can't delete it",
+    "already_added": "Tires are already added"
+  }
+}

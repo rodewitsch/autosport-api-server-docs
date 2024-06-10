@@ -1,0 +1,4 @@
+{
+  "commitUrlFormat": "https://github.com/rodewitsch/autosport-api-server/commits/{{hash}}",
+  "compareUrlFormat": "https://github.com/rodewitsch/autosport-api-server/compare/{{previousTag}}...{{currentTag}}"
+}

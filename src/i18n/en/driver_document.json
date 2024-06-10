@@ -1,0 +1,7 @@
+{
+  "errors": {
+    "not_found": "Document not found",
+    "already_added": "Document already added",
+    "used_in_ongoing_events": "Document is used in ongoing events. You can't delete it"
+  }
+}

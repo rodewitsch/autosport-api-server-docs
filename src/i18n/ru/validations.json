@@ -1,0 +1,8 @@
+{
+  "not_be_empty": "Поле {property} не должно быть пустым",
+  "email_must_be_email": "Поле {property} должно быть валидным адресом электронной почты",
+  "must_be_string": "Поле {property} должно быть строкой",
+  "must_be_integer": "Поле {property} должно быть целым числом",
+  "must_be_number": "Поле {property} должно быть числом",
+  "min_value": "Поле {property} должно быть больше или равно {constraints.0}"
+}

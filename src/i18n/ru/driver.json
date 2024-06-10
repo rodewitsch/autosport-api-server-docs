@@ -1,0 +1,10 @@
+{
+  "errors": {
+    "not_found": "Водитель не найден",
+    "photo_not_found": "У водителя нет фото",
+    "driver_exists": "Водитель с таким именем уже существует",
+    "duplicated_need_organizer_attention": "Водитель с таким именем уже существует. Обратитесь к организатору",
+    "already_created": "Водитель уже создан",
+    "driver_with_such_email_has_account": "Водитель с учетной учетной записью с таким email уже существует"
+  }
+}

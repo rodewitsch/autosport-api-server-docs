@@ -1,0 +1,12 @@
+{
+  "validations": {
+    "first_name_must_be_string": "First name must be a string",
+    "first_name_not_empty": "First name can't be empty",
+    "last_name_must_be_string": "Last name must be a string",
+    "last_name_not_empty": "Last name can't be empty"
+  },
+  "errors": {
+    "not_found": "Account not found",
+    "photo_not_found": "Account doesn't have any photos"
+  }
+}

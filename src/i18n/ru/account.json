@@ -1,0 +1,12 @@
+{
+  "validations": {
+    "first_name_must_be_string": "Поле 'Имя' должно быть строкой",
+    "first_name_not_empty": "Поле 'Имя' не может быть пустым",
+    "last_name_must_be_string": "Поле 'Фамилия' должно быть строкой",
+    "last_name_not_empty": "Поле 'Фамилия' не может быть пустым"
+  },
+  "errors": {
+    "not_found": "Аккаунт не найден",
+    "photo_not_found": "У аккаунта нет фото"
+  }
+}

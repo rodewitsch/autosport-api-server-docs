@@ -1,0 +1,10 @@
+{
+  "errors": {
+    "not_found": "Driver not found",
+    "photo_not_found": "Driver doesn't have any photos",
+    "driver_exists": "Driver already exists",
+    "duplicated_need_organizer_attention": "Driver with provided name already exists. Please contact the organizer",
+    "already_created": "Driver already created",
+    "driver_with_such_email_has_account": "Driver with account with such email already exists"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "name": "DEVELOPMENT",
+      "runtimeExecutable": "npm",
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"],
+      "runtimeArgs": ["run", "start:dev"],
+      "env": {
+        "LOG_ERROR_PATH": "logs/error.log",
+        "LOG_INFO_PATH": "logs/info.log",
+        "PORT": "3000"
+      }
+    }
+  ]
+}

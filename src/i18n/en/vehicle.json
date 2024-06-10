@@ -1,0 +1,11 @@
+{
+  "validations": {
+    "image_too_big": "Image size is too big"
+  },
+  "errors": {
+    "vehicle_name_exists": "Vehicle name already exists",
+    "vehicle_not_found": "Vehicle not found",
+    "photo_not_found": "Vehicle doesn't have any photo",
+    "is_event_member": "Vehicle is linked with event. You can't delete it"
+  }
+}

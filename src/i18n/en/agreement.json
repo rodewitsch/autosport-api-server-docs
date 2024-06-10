@@ -1,0 +1,6 @@
+{
+  "errors": {
+    "not_found": "Agreements not found",
+    "already_accepted": "Agreement already accepted"
+  }
+}

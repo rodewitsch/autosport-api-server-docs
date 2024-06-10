@@ -1,0 +1,21 @@
+{
+  "errors": {
+    "not_found": "Event not found",
+    "image_not_found": "Event doesn't have any image",
+    "registration_unavailable": "Registration is not available for this event",
+    "not_registered": "You are not registered for this event",
+    "already_registered": "You are already registered for this event",
+    "missed_documents": "You have to upload all the required documents for this event",
+    "rules_not_found": "Event rules not found",
+    "wrong_classes": "You have chosen wrong classes for this event",
+    "no_classes": "You have to choose at least one class for this event",
+    "event_finished": "Event is already finished",
+    "status_cant_be_changed": "Status can't be changed",
+    "road_condition_cant_be_changed": "Road condition can't be changed",
+    "status_already_set": "Status is already set",
+    "event_member_not_found": "Event member not found",
+    "event_started_registration_can_not_be_changed": "Event has started, registration can't be changed",
+    "event_finished_registration_can_not_be_changed": "Event has finished, registration can't be changed",
+    "start_num_exists": "The starting number is already taken. Check that the entered number is correct or use the registration plate number"
+  }
+}
