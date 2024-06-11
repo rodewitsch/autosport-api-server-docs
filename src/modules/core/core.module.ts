@@ -3,8 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import Joi from 'joi';
-import { WinstonModule } from 'nest-winston';
-import winston from 'winston';
 import { SessionMiddleware } from '../../middlewares/session.middleware';
 
 @Global()
@@ -19,28 +17,7 @@ import { SessionMiddleware } from '../../middlewares/session.middleware';
         PORT: Joi.number(),
       }),
     }),
-    WinstonModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        transports: [
-          new winston.transports.File({
-            filename: configService.get('LOG_ERROR_PATH'),
-            level: 'error',
-            format: winston.format.combine(winston.format((info) => info.level === 'error' && info)()),
-            maxsize: 104857600,
-            maxFiles: 5,
-          }),
-          new winston.transports.File({
-            filename: configService.get('LOG_INFO_PATH'),
-            level: 'info',
-            format: winston.format.combine(winston.format((info) => info.level === 'info' && info)()),
-            maxsize: 104857600,
-            maxFiles: 5,
-          }),
-        ],
-      }),
-      inject: [ConfigService],
-    }),
+
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
