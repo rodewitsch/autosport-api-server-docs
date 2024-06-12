@@ -123,9 +123,9 @@ export const setupApp = async (app: INestApplication) => {
               if (!section.classList.contains('is-open')) {
                 const observer = new MutationObserver(() => {
                   observer.disconnect();
-                  console.log('mutation');
                   filterOperations(section);
                   addOperationTags(section);
+                  expandTypeSpoilers(section);
                 });
                 observer.observe(section, { childList: true, subtree: true });
               }
@@ -165,6 +165,33 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
+            const expandTypeSpoilers = (section: Element) => {
+              const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                  mutation.addedNodes.forEach((addedNode) => {
+                    if ((addedNode as HTMLElement).classList.contains('model-example')) {
+                      observeModelExampleContent(addedNode);
+                    }
+                  });
+                });
+              });
+              observer.observe(section, { childList: true, subtree: true });
+            };
+
+            const observeModelExampleContent = (modelExample: Node) => {
+              const observer = new MutationObserver(() => {
+                const isSchemaTab =
+                  (modelExample as HTMLElement).querySelector('div').getAttribute('data-name') === 'modelPanel';
+                if (isSchemaTab) {
+                  console.log(isSchemaTab);
+                }
+
+                observer.disconnect();
+                observer.observe(modelExample, { childList: true, subtree: false });
+              });
+              observer.observe(modelExample, { childList: true, subtree: false });
+            };
+
             (() => {
               mountSelector();
 
@@ -177,6 +204,8 @@ export const setupApp = async (app: INestApplication) => {
               const sections = window.document.getElementsByClassName('opblock-tag-section');
               for (const section of sections) {
                 section.addEventListener('click', () => observeSection(section));
+
+                expandTypeSpoilers(section);
               }
             })();
           });
