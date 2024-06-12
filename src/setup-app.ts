@@ -172,7 +172,6 @@ export const setupApp = async (app: INestApplication) => {
               if (openedSection) {
                 filterOperations(openedSection);
                 addOperationTags(openedSection);
-                observeSection(openedSection);
               }
 
               const sections = window.document.getElementsByClassName('opblock-tag-section');
