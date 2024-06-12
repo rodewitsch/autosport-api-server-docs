@@ -138,8 +138,7 @@ export const setupApp = async (app: INestApplication) => {
 
               const sections = window.document.getElementsByClassName('opblock-tag-section');
               for (const section of sections) {
-                const expandBtn = section.querySelector('.expand-operation');
-                expandBtn.addEventListener('click', () => observeSection(section));
+                section.addEventListener('click', () => observeSection(section));
               }
             })();
           });
@@ -152,4 +151,3 @@ export const setupApp = async (app: INestApplication) => {
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, exceptionFactory: i18nValidationErrorFactory }));
 };
-
