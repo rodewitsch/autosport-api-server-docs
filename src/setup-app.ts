@@ -119,12 +119,51 @@ export const setupApp = async (app: INestApplication) => {
             };
 
             const observeSection = (section: Element) => {
-              if (section.getAttribute('data-observed') === 'true') return;
+              if (section.getAttribute('observed') === 'true') return;
+
               const observer = new MutationObserver(() => {
                 filterOperations(section);
+                observer.disconnect();
+                addOperationTags(section);
+                observer.observe(section, { childList: true, subtree: true });
               });
+
               observer.observe(section, { childList: true, subtree: true });
               section.setAttribute('observed', 'true');
+            };
+
+            const extractOperationVersion = (operationId: string) => {
+              const versionRegex = /Controller([A-Za-z0-9]+)_/;
+              const version = operationId.match(versionRegex)[1];
+              const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
+              return { operationIdWithoutVersion, version };
+            };
+
+            const addOperationTags = (section: Element) => {
+              const operations = section.getElementsByClassName('opblock');
+              const operationsMap = new Map<string, string[]>();
+
+              for (const operation of operations) {
+                const { operationIdWithoutVersion, version } = extractOperationVersion(operation.id);
+                if (!operationsMap.has(operationIdWithoutVersion)) {
+                  operationsMap.set(operationIdWithoutVersion, []);
+                }
+                operationsMap.get(operationIdWithoutVersion).push(version.toLowerCase());
+              }
+
+              for (const operation of operations) {
+                const { operationIdWithoutVersion } = extractOperationVersion(operation.id);
+                const operationVersions = operationsMap.get(operationIdWithoutVersion);
+
+                const versionsDiv = window.document.createElement('div');
+                versionsDiv.style.marginRight = '20px';
+                versionsDiv.style.fontSize = '14px';
+                versionsDiv.innerHTML = operationVersions.join(' ');
+
+                const parentNode = operation.querySelector('.opblock-summary');
+                const childNode = parentNode.querySelector('.view-line-link');
+                parentNode.insertBefore(versionsDiv, childNode);
+              }
             };
 
             (() => {
@@ -133,6 +172,7 @@ export const setupApp = async (app: INestApplication) => {
               const openedSection = window.document.querySelector('.opblock-tag-section.is-open');
               if (openedSection) {
                 filterOperations(openedSection);
+                addOperationTags(openedSection);
                 observeSection(openedSection);
               }
 
