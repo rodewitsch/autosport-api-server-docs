@@ -109,6 +109,7 @@ export const setupApp = async (app: INestApplication) => {
             const filterOperations = (section: Element) => {
               const apiVersionSelector = window.document.getElementById('version-selector') as HTMLSelectElement;
               const operations = section.getElementsByClassName('opblock');
+
               for (const operation of operations) {
                 if (shouldHideOperation(operation.id, apiVersionSelector.value)) {
                   (operation as HTMLElement).hidden = true;
