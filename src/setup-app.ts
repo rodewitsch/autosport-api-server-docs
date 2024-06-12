@@ -61,6 +61,88 @@ export const setupApp = async (app: INestApplication) => {
       swaggerOptions: {
         persistAuthorization: true,
         docExpansion: 'none',
+        onComplete: () => {
+          setTimeout(() => {
+            const mountSelector = () => {
+              const topBarWrapper = window.document.querySelector('.topbar-wrapper');
+
+              const label = window.document.createElement('label');
+              label.innerText = 'API version';
+              label.style.fontSize = '20px';
+              label.style.color = 'white';
+              label.style.margin = '0 10px 0 40vw';
+
+              const apiVersionSelector = window.document.createElement('select');
+              apiVersionSelector.id = 'version-selector';
+              apiVersionSelector.style.cursor = 'pointer';
+              ['2', '3', '-'].forEach((version) => {
+                const option = window.document.createElement('option');
+                option.value = version;
+                option.textContent = version;
+                apiVersionSelector.appendChild(option);
+              });
+              const initialValue = localStorage.getItem('apiVersion') || '2';
+              apiVersionSelector.value = initialValue;
+
+              apiVersionSelector.addEventListener('change', () => {
+                const sections = window.document.getElementsByClassName('opblock-tag-section is-open');
+                for (const section of sections) {
+                  filterOperations(section);
+                }
+                localStorage.setItem('apiVersion', apiVersionSelector.value);
+              });
+
+              topBarWrapper.appendChild(label);
+              topBarWrapper.appendChild(apiVersionSelector);
+            };
+
+            const shouldHideOperation = (operationId: string, apiVersion: string) => {
+              const versionMap = {
+                '2': 'V2',
+                '3': 'V3',
+                '-': '',
+              };
+              const versionValue = versionMap[apiVersion];
+              return !operationId.includes(versionValue) && !operationId.includes('Neutral');
+            };
+
+            const filterOperations = (section: Element) => {
+              const apiVersionSelector = window.document.getElementById('version-selector') as HTMLSelectElement;
+              const operations = section.getElementsByClassName('opblock');
+              for (const operation of operations) {
+                if (shouldHideOperation(operation.id, apiVersionSelector.value)) {
+                  (operation as HTMLElement).hidden = true;
+                } else {
+                  (operation as HTMLElement).hidden = false;
+                }
+              }
+            };
+
+            const observeSection = (section: Element) => {
+              if (section.getAttribute('data-observed') === 'true') return;
+              const observer = new MutationObserver(() => {
+                filterOperations(section);
+              });
+              observer.observe(section, { childList: true, subtree: true });
+              section.setAttribute('observed', 'true');
+            };
+
+            (() => {
+              mountSelector();
+
+              const openedSection = window.document.querySelector('.opblock-tag-section.is-open');
+              if (openedSection) {
+                filterOperations(openedSection);
+                observeSection(openedSection);
+              }
+
+              const sections = window.document.getElementsByClassName('opblock-tag-section');
+              for (const section of sections) {
+                section.addEventListener('click', () => observeSection(section));
+              }
+            })();
+          });
+        },
       },
     });
   }
