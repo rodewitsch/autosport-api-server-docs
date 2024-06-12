@@ -120,17 +120,15 @@ export const setupApp = async (app: INestApplication) => {
             };
 
             const observeSection = (section: Element) => {
-              if (section.getAttribute('observed') === 'true') return;
-
-              const observer = new MutationObserver(() => {
-                filterOperations(section);
-                observer.disconnect();
-                addOperationTags(section);
+              if (!section.classList.contains('is-open')) {
+                const observer = new MutationObserver(() => {
+                  observer.disconnect();
+                  console.log('mutation');
+                  filterOperations(section);
+                  addOperationTags(section);
+                });
                 observer.observe(section, { childList: true, subtree: true });
-              });
-
-              observer.observe(section, { childList: true, subtree: true });
-              section.setAttribute('observed', 'true');
+              }
             };
 
             const extractOperationVersion = (operationId: string) => {
