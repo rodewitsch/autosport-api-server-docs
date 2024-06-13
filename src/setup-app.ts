@@ -167,6 +167,7 @@ export const setupApp = async (app: INestApplication) => {
 
             const observeModel = (modelDiv: Element) => {
               const modelObserver = new MutationObserver((innerMutations) => {
+                console.log('!');
                 innerMutations.forEach((innerMutation) => {
                   if (
                     innerMutation.addedNodes.length &&
@@ -181,7 +182,7 @@ export const setupApp = async (app: INestApplication) => {
                   }
                 });
               });
-              modelObserver.observe(modelDiv, { childList: true, subtree: true });
+              modelObserver.observe(modelDiv, { childList: true, subtree: false });
             };
 
             const expandTypeSpoilers = (section: Element) => {
@@ -199,7 +200,7 @@ export const setupApp = async (app: INestApplication) => {
                       });
                     });
                   });
-                  operationObserver.observe(operation, { childList: true, subtree: true });
+                  operationObserver.observe(operation, { childList: true, subtree: false });
                 });
               });
               sectionObserver.observe(section, { childList: true, subtree: true });
