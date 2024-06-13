@@ -166,30 +166,40 @@ export const setupApp = async (app: INestApplication) => {
             };
 
             const expandTypeSpoilers = (section: Element) => {
-              const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                  mutation.addedNodes.forEach((addedNode) => {
-                    if ((addedNode as HTMLElement).classList.contains('model-example')) {
-                      observeModelExampleContent(addedNode);
-                    }
+              const sectionObserver = new MutationObserver(() => {
+                const operations = section.querySelectorAll('.opblock');
+
+                operations.forEach((operation) => {
+                  const operationObserver = new MutationObserver(() => {
+                    const blocks = operation.querySelectorAll('.opblock-section-request-body, .responses-wrapper');
+
+                    blocks.forEach((block) => {
+                      const modelDivs = block.querySelectorAll('.model-example');
+
+                      modelDivs.forEach((modelDiv) => {
+                        const modelObserver = new MutationObserver((innerMutations) => {
+                          innerMutations.forEach((innerMutation) => {
+                            if (
+                              innerMutation.addedNodes.length &&
+                              modelDiv.querySelector(':scope > div').getAttribute('data-name') === 'modelPanel'
+                            ) {
+                              const btns = modelDiv.querySelectorAll('button.model-box-control');
+                              btns.forEach((btn) => {
+                                if (btn.getAttribute('aria-expanded') === 'false') {
+                                  (btn as HTMLElement).click();
+                                }
+                              });
+                            }
+                          });
+                        });
+                        modelObserver.observe(modelDiv, { childList: true, subtree: true });
+                      });
+                    });
                   });
+                  operationObserver.observe(operation, { childList: true, subtree: true });
                 });
               });
-              observer.observe(section, { childList: true, subtree: true });
-            };
-
-            const observeModelExampleContent = (modelExample: Node) => {
-              const observer = new MutationObserver(() => {
-                const isSchemaTab =
-                  (modelExample as HTMLElement).querySelector('div').getAttribute('data-name') === 'modelPanel';
-                if (isSchemaTab) {
-                  console.log(isSchemaTab);
-                }
-
-                observer.disconnect();
-                observer.observe(modelExample, { childList: true, subtree: false });
-              });
-              observer.observe(modelExample, { childList: true, subtree: false });
+              sectionObserver.observe(section, { childList: true, subtree: true });
             };
 
             (() => {
@@ -204,7 +214,6 @@ export const setupApp = async (app: INestApplication) => {
               const sections = window.document.getElementsByClassName('opblock-tag-section');
               for (const section of sections) {
                 section.addEventListener('click', () => observeSection(section));
-
                 expandTypeSpoilers(section);
               }
             })();
