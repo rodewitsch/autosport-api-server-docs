@@ -165,6 +165,25 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
+            const observeModel = (modelDiv: Element) => {
+              const modelObserver = new MutationObserver((innerMutations) => {
+                innerMutations.forEach((innerMutation) => {
+                  if (
+                    innerMutation.addedNodes.length &&
+                    modelDiv.querySelector(':scope > div').getAttribute('data-name') === 'modelPanel'
+                  ) {
+                    const btns = modelDiv.querySelectorAll('button.model-box-control');
+                    btns.forEach((btn) => {
+                      if (btn.getAttribute('aria-expanded') === 'false') {
+                        (btn as HTMLElement).click();
+                      }
+                    });
+                  }
+                });
+              });
+              modelObserver.observe(modelDiv, { childList: true, subtree: true });
+            };
+
             const expandTypeSpoilers = (section: Element) => {
               const sectionObserver = new MutationObserver(() => {
                 const operations = section.querySelectorAll('.opblock');
@@ -174,25 +193,9 @@ export const setupApp = async (app: INestApplication) => {
                     const blocks = operation.querySelectorAll('.opblock-section-request-body, .responses-wrapper');
 
                     blocks.forEach((block) => {
-                      const modelDivs = block.querySelectorAll('.model-example');
-
-                      modelDivs.forEach((modelDiv) => {
-                        const modelObserver = new MutationObserver((innerMutations) => {
-                          innerMutations.forEach((innerMutation) => {
-                            if (
-                              innerMutation.addedNodes.length &&
-                              modelDiv.querySelector(':scope > div').getAttribute('data-name') === 'modelPanel'
-                            ) {
-                              const btns = modelDiv.querySelectorAll('button.model-box-control');
-                              btns.forEach((btn) => {
-                                if (btn.getAttribute('aria-expanded') === 'false') {
-                                  (btn as HTMLElement).click();
-                                }
-                              });
-                            }
-                          });
-                        });
-                        modelObserver.observe(modelDiv, { childList: true, subtree: true });
+                      const models = block.querySelectorAll('.model-example');
+                      models.forEach((model) => {
+                        observeModel(model);
                       });
                     });
                   });
@@ -216,6 +219,12 @@ export const setupApp = async (app: INestApplication) => {
                 section.addEventListener('click', () => observeSection(section));
                 expandTypeSpoilers(section);
               }
+
+              setTimeout(() => {
+                window.document.querySelectorAll('.model-example').forEach((model) => {
+                  observeModel(model);
+                });
+              }, 300);
             })();
           });
         },
