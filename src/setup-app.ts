@@ -109,6 +109,7 @@ export const setupApp = async (app: INestApplication) => {
             const filterOperations = (section: Element) => {
               const apiVersionSelector = window.document.getElementById('version-selector') as HTMLSelectElement;
               const operations = section.getElementsByClassName('opblock');
+
               for (const operation of operations) {
                 if (shouldHideOperation(operation.id, apiVersionSelector.value)) {
                   (operation as HTMLElement).hidden = true;
@@ -119,12 +120,76 @@ export const setupApp = async (app: INestApplication) => {
             };
 
             const observeSection = (section: Element) => {
-              if (section.getAttribute('data-observed') === 'true') return;
-              const observer = new MutationObserver(() => {
-                filterOperations(section);
+              if (!section.classList.contains('is-open')) {
+                const observer = new MutationObserver(() => {
+                  observer.disconnect();
+                  filterOperations(section);
+                  addOperationTags(section);
+                  expandTypeSpoilers(section);
+                });
+                observer.observe(section, { childList: true, subtree: true });
+              }
+            };
+
+            const extractOperationVersion = (operationId: string) => {
+              const versionRegex = /Controller([A-Za-z0-9]+)_/;
+              const version = operationId.match(versionRegex)[1];
+              const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
+              return { operationIdWithoutVersion, version };
+            };
+
+            const addOperationTags = (section: Element) => {
+              const operations = section.getElementsByClassName('opblock');
+              const operationsMap = new Map<string, string[]>();
+
+              for (const operation of operations) {
+                const { operationIdWithoutVersion, version } = extractOperationVersion(operation.id);
+                if (!operationsMap.has(operationIdWithoutVersion)) {
+                  operationsMap.set(operationIdWithoutVersion, []);
+                }
+                operationsMap.get(operationIdWithoutVersion).push(version.toLowerCase());
+              }
+
+              for (const operation of operations) {
+                const { operationIdWithoutVersion } = extractOperationVersion(operation.id);
+                const operationVersions = operationsMap.get(operationIdWithoutVersion);
+
+                const versionsDiv = window.document.createElement('div');
+                versionsDiv.style.marginRight = '20px';
+                versionsDiv.style.fontSize = '14px';
+                versionsDiv.innerHTML = operationVersions.join(' ');
+
+                const parentNode = operation.querySelector('.opblock-summary');
+                const childNode = parentNode.querySelector('.view-line-link');
+                parentNode.insertBefore(versionsDiv, childNode);
+              }
+            };
+
+            const expandTypeSpoilers = (section: Element) => {
+              const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                  mutation.addedNodes.forEach((addedNode) => {
+                    if ((addedNode as HTMLElement).classList.contains('model-example')) {
+                      observeModelExampleContent(addedNode);
+                    }
+                  });
+                });
               });
               observer.observe(section, { childList: true, subtree: true });
-              section.setAttribute('observed', 'true');
+            };
+
+            const observeModelExampleContent = (modelExample: Node) => {
+              const observer = new MutationObserver(() => {
+                const isSchemaTab =
+                  (modelExample as HTMLElement).querySelector('div').getAttribute('data-name') === 'modelPanel';
+                if (isSchemaTab) {
+                  console.log(isSchemaTab);
+                }
+
+                observer.disconnect();
+                observer.observe(modelExample, { childList: true, subtree: false });
+              });
+              observer.observe(modelExample, { childList: true, subtree: false });
             };
 
             (() => {
@@ -133,12 +198,14 @@ export const setupApp = async (app: INestApplication) => {
               const openedSection = window.document.querySelector('.opblock-tag-section.is-open');
               if (openedSection) {
                 filterOperations(openedSection);
-                observeSection(openedSection);
+                addOperationTags(openedSection);
               }
 
               const sections = window.document.getElementsByClassName('opblock-tag-section');
               for (const section of sections) {
                 section.addEventListener('click', () => observeSection(section));
+
+                expandTypeSpoilers(section);
               }
             })();
           });
