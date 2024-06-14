@@ -119,75 +119,17 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            const sectionObservers = new WeakMap<Element, MutationObserver>();
-            const operationObservers = new WeakMap<Element, MutationObserver>();
-
             const handleSection = (section: Element) => {
               if (!section.classList.contains('is-open')) {
                 const sectionObserver = new MutationObserver(() => {
-                  console.log('sectionObserver');
                   sectionObserver.disconnect();
 
                   filterSectionOperations(section);
                   tagSectionOperations(section);
-
-                  const operations = section.querySelectorAll('.opblock');
-                  for (const operation of operations) {
-                    operation.addEventListener('click', () => handleOperation(operation));
-                  }
                 });
 
                 sectionObserver.observe(section, { childList: true, subtree: true });
-                sectionObservers.set(section, sectionObserver);
-              } else {
-                const sectionObserver = sectionObservers.get(section);
-                if (sectionObserver) {
-                  sectionObserver.disconnect();
-                  sectionObservers.delete(section);
-                }
               }
-              console.log(sectionObservers);
-            };
-
-            const handleOperation = (operation: Element) => {
-              if (!operation.classList.contains('is-open')) {
-                const operationObserver = new MutationObserver(() => {
-                  console.log('operationObserver');
-                  operationObserver.disconnect();
-
-                  setTimeout(() => {
-                    const models = operation.querySelectorAll('.model-example');
-                    console.log(models);
-
-                    if (models.length) {
-                      operationObserver.disconnect();
-                    }
-                  }, 100);
-
-                  // setTimeout(() => {
-                  //   const blocks = operation.querySelectorAll('.opblock-section-request-body, .responses-wrapper');
-                  //   console.log(blocks);
-                  // }, 300);
-
-                  // blocks.forEach((block) => {
-                  //   const models = block.querySelectorAll('.model-example');
-                  //   console.log(models);
-                  //   models.forEach((model) => {
-                  //     observeModel(model);
-                  //   });
-                  // });
-                });
-
-                operationObserver.observe(operation, { childList: true, subtree: true });
-                operationObservers.set(operation, operationObserver);
-              } else {
-                const operationObserver = operationObservers.get(operation);
-                if (operationObserver) {
-                  operationObserver.disconnect();
-                  operationObservers.delete(operation);
-                }
-              }
-              console.log(operationObservers);
             };
 
             const extractOperationVersion = (operationId: string) => {
@@ -241,7 +183,24 @@ export const setupApp = async (app: INestApplication) => {
                   }
                 });
               });
+
               modelObserver.observe(modelDiv, { childList: true, subtree: true });
+            };
+
+            const expandSpoilers = () => {
+              const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                  mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) {
+                      (node as Element).querySelectorAll('.model-example').forEach((modelExample) => {
+                        observeModel(modelExample);
+                      });
+                    }
+                  });
+                });
+              });
+
+              observer.observe(window.document.body, { childList: true, subtree: true });
             };
 
             (() => {
@@ -258,11 +217,7 @@ export const setupApp = async (app: INestApplication) => {
                 header.addEventListener('click', () => handleSection(header.parentElement));
               }
 
-              setTimeout(() => {
-                window.document.querySelectorAll('.model-example').forEach((model) => {
-                  observeModel(model);
-                });
-              }, 300);
+              expandSpoilers();
             })();
           });
         },
