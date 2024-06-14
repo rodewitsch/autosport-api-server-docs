@@ -224,6 +224,26 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
+            const observeModel = (modelDiv: Element) => {
+              const modelObserver = new MutationObserver((innerMutations) => {
+                console.log('modelObserver');
+                innerMutations.forEach((innerMutation) => {
+                  if (
+                    innerMutation.addedNodes.length &&
+                    modelDiv.querySelector(':scope > div').getAttribute('data-name') === 'modelPanel'
+                  ) {
+                    const btns = modelDiv.querySelectorAll('button.model-box-control');
+                    btns.forEach((btn) => {
+                      if (btn.getAttribute('aria-expanded') === 'false') {
+                        (btn as HTMLElement).click();
+                      }
+                    });
+                  }
+                });
+              });
+              modelObserver.observe(modelDiv, { childList: true, subtree: true });
+            };
+
             (() => {
               mountSelector();
 
@@ -239,7 +259,9 @@ export const setupApp = async (app: INestApplication) => {
               }
 
               setTimeout(() => {
-                window.document.querySelectorAll('.model-example').forEach((model) => {});
+                window.document.querySelectorAll('.model-example').forEach((model) => {
+                  observeModel(model);
+                });
               }, 300);
             })();
           });
