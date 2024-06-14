@@ -87,7 +87,7 @@ export const setupApp = async (app: INestApplication) => {
               apiVersionSelector.addEventListener('change', () => {
                 const sections = window.document.getElementsByClassName('opblock-tag-section is-open');
                 for (const section of sections) {
-                  filterOperations(section);
+                  filterSectionOperations(section);
                 }
                 localStorage.setItem('apiVersion', apiVersionSelector.value);
               });
@@ -106,7 +106,7 @@ export const setupApp = async (app: INestApplication) => {
               return !operationId.includes(versionValue) && !operationId.includes('Neutral');
             };
 
-            const filterOperations = (section: Element) => {
+            const filterSectionOperations = (section: Element) => {
               const apiVersionSelector = window.document.getElementById('version-selector') as HTMLSelectElement;
               const operations = section.getElementsByClassName('opblock');
 
@@ -119,16 +119,75 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            const observeSection = (section: Element) => {
+            const sectionObservers = new WeakMap<Element, MutationObserver>();
+            const operationObservers = new WeakMap<Element, MutationObserver>();
+
+            const handleSection = (section: Element) => {
               if (!section.classList.contains('is-open')) {
-                const observer = new MutationObserver(() => {
-                  observer.disconnect();
-                  filterOperations(section);
-                  addOperationTags(section);
-                  expandTypeSpoilers(section);
+                const sectionObserver = new MutationObserver(() => {
+                  console.log('sectionObserver');
+                  sectionObserver.disconnect();
+
+                  filterSectionOperations(section);
+                  tagSectionOperations(section);
+
+                  const operations = section.querySelectorAll('.opblock');
+                  for (const operation of operations) {
+                    operation.addEventListener('click', () => handleOperation(operation));
+                  }
                 });
-                observer.observe(section, { childList: true, subtree: true });
+
+                sectionObserver.observe(section, { childList: true, subtree: true });
+                sectionObservers.set(section, sectionObserver);
+              } else {
+                const sectionObserver = sectionObservers.get(section);
+                if (sectionObserver) {
+                  sectionObserver.disconnect();
+                  sectionObservers.delete(section);
+                }
               }
+              console.log(sectionObservers);
+            };
+
+            const handleOperation = (operation: Element) => {
+              if (!operation.classList.contains('is-open')) {
+                const operationObserver = new MutationObserver(() => {
+                  console.log('operationObserver');
+                  operationObserver.disconnect();
+
+                  setTimeout(() => {
+                    const models = operation.querySelectorAll('.model-example');
+                    console.log(models);
+
+                    if (models.length) {
+                      operationObserver.disconnect();
+                    }
+                  }, 100);
+
+                  // setTimeout(() => {
+                  //   const blocks = operation.querySelectorAll('.opblock-section-request-body, .responses-wrapper');
+                  //   console.log(blocks);
+                  // }, 300);
+
+                  // blocks.forEach((block) => {
+                  //   const models = block.querySelectorAll('.model-example');
+                  //   console.log(models);
+                  //   models.forEach((model) => {
+                  //     observeModel(model);
+                  //   });
+                  // });
+                });
+
+                operationObserver.observe(operation, { childList: true, subtree: true });
+                operationObservers.set(operation, operationObserver);
+              } else {
+                const operationObserver = operationObservers.get(operation);
+                if (operationObserver) {
+                  operationObserver.disconnect();
+                  operationObservers.delete(operation);
+                }
+              }
+              console.log(operationObservers);
             };
 
             const extractOperationVersion = (operationId: string) => {
@@ -138,7 +197,7 @@ export const setupApp = async (app: INestApplication) => {
               return { operationIdWithoutVersion, version };
             };
 
-            const addOperationTags = (section: Element) => {
+            const tagSectionOperations = (section: Element) => {
               const operations = section.getElementsByClassName('opblock');
               const operationsMap = new Map<string, string[]>();
 
@@ -167,7 +226,7 @@ export const setupApp = async (app: INestApplication) => {
 
             const observeModel = (modelDiv: Element) => {
               const modelObserver = new MutationObserver((innerMutations) => {
-                console.log('!');
+                console.log('modelObserver');
                 innerMutations.forEach((innerMutation) => {
                   if (
                     innerMutation.addedNodes.length &&
@@ -182,28 +241,7 @@ export const setupApp = async (app: INestApplication) => {
                   }
                 });
               });
-              modelObserver.observe(modelDiv, { childList: true, subtree: false });
-            };
-
-            const expandTypeSpoilers = (section: Element) => {
-              const sectionObserver = new MutationObserver(() => {
-                const operations = section.querySelectorAll('.opblock');
-
-                operations.forEach((operation) => {
-                  const operationObserver = new MutationObserver(() => {
-                    const blocks = operation.querySelectorAll('.opblock-section-request-body, .responses-wrapper');
-
-                    blocks.forEach((block) => {
-                      const models = block.querySelectorAll('.model-example');
-                      models.forEach((model) => {
-                        observeModel(model);
-                      });
-                    });
-                  });
-                  operationObserver.observe(operation, { childList: true, subtree: false });
-                });
-              });
-              sectionObserver.observe(section, { childList: true, subtree: true });
+              modelObserver.observe(modelDiv, { childList: true, subtree: true });
             };
 
             (() => {
@@ -211,14 +249,13 @@ export const setupApp = async (app: INestApplication) => {
 
               const openedSection = window.document.querySelector('.opblock-tag-section.is-open');
               if (openedSection) {
-                filterOperations(openedSection);
-                addOperationTags(openedSection);
+                filterSectionOperations(openedSection);
+                tagSectionOperations(openedSection);
               }
 
-              const sections = window.document.getElementsByClassName('opblock-tag-section');
-              for (const section of sections) {
-                section.addEventListener('click', () => observeSection(section));
-                expandTypeSpoilers(section);
+              const sectionsHeaders = window.document.getElementsByClassName('opblock-tag');
+              for (const header of sectionsHeaders) {
+                header.addEventListener('click', () => handleSection(header.parentElement));
               }
 
               setTimeout(() => {
