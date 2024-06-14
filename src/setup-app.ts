@@ -166,33 +166,15 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            const observeModel = (modelDiv: Element) => {
-              const modelObserver = new MutationObserver((innerMutations) => {
-                innerMutations.forEach((innerMutation) => {
-                  if (
-                    innerMutation.addedNodes.length &&
-                    modelDiv.querySelector(':scope > div').getAttribute('data-name') === 'modelPanel'
-                  ) {
-                    const btns = modelDiv.querySelectorAll('button.model-box-control');
-                    btns.forEach((btn) => {
-                      if (btn.getAttribute('aria-expanded') === 'false') {
-                        (btn as HTMLElement).click();
-                      }
-                    });
-                  }
-                });
-              });
-
-              modelObserver.observe(modelDiv, { childList: true, subtree: true });
-            };
-
             const expandSpoilers = () => {
               const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                   mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1) {
-                      (node as Element).querySelectorAll('.model-example').forEach((modelExample) => {
-                        observeModel(modelExample);
+                      (node as Element).querySelectorAll('button.model-box-control').forEach((btn) => {
+                        if (btn.getAttribute('aria-expanded') === 'false') {
+                          (btn as HTMLElement).click();
+                        }
                       });
                     }
                   });
