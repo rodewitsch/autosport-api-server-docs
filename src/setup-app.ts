@@ -168,7 +168,6 @@ export const setupApp = async (app: INestApplication) => {
 
             const observeModel = (modelDiv: Element) => {
               const modelObserver = new MutationObserver((innerMutations) => {
-                console.log('modelObserver');
                 innerMutations.forEach((innerMutation) => {
                   if (
                     innerMutation.addedNodes.length &&
