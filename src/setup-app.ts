@@ -87,7 +87,7 @@ export const setupApp = async (app: INestApplication) => {
               apiVersionSelector.addEventListener('change', () => {
                 const sections = window.document.getElementsByClassName('opblock-tag-section is-open');
                 for (const section of sections) {
-                  filterOperations(section);
+                  filterSectionOperations(section);
                 }
                 localStorage.setItem('apiVersion', apiVersionSelector.value);
               });
@@ -106,7 +106,7 @@ export const setupApp = async (app: INestApplication) => {
               return !operationId.includes(versionValue) && !operationId.includes('Neutral');
             };
 
-            const filterOperations = (section: Element) => {
+            const filterSectionOperations = (section: Element) => {
               const apiVersionSelector = window.document.getElementById('version-selector') as HTMLSelectElement;
               const operations = section.getElementsByClassName('opblock');
 
@@ -119,15 +119,16 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            const observeSection = (section: Element) => {
+            const handleSection = (section: Element) => {
               if (!section.classList.contains('is-open')) {
-                const observer = new MutationObserver(() => {
-                  observer.disconnect();
-                  filterOperations(section);
-                  addOperationTags(section);
-                  expandTypeSpoilers(section);
+                const sectionObserver = new MutationObserver(() => {
+                  sectionObserver.disconnect();
+
+                  filterSectionOperations(section);
+                  tagSectionOperations(section);
                 });
-                observer.observe(section, { childList: true, subtree: true });
+
+                sectionObserver.observe(section, { childList: true, subtree: true });
               }
             };
 
@@ -138,7 +139,7 @@ export const setupApp = async (app: INestApplication) => {
               return { operationIdWithoutVersion, version };
             };
 
-            const addOperationTags = (section: Element) => {
+            const tagSectionOperations = (section: Element) => {
               const operations = section.getElementsByClassName('opblock');
               const operationsMap = new Map<string, string[]>();
 
@@ -165,31 +166,22 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            const expandTypeSpoilers = (section: Element) => {
+            const expandSpoilers = () => {
               const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
-                  mutation.addedNodes.forEach((addedNode) => {
-                    if ((addedNode as HTMLElement).classList.contains('model-example')) {
-                      observeModelExampleContent(addedNode);
+                  mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) {
+                      (node as Element).querySelectorAll('button.model-box-control').forEach((btn) => {
+                        if (btn.getAttribute('aria-expanded') === 'false') {
+                          (btn as HTMLElement).click();
+                        }
+                      });
                     }
                   });
                 });
               });
-              observer.observe(section, { childList: true, subtree: true });
-            };
 
-            const observeModelExampleContent = (modelExample: Node) => {
-              const observer = new MutationObserver(() => {
-                const isSchemaTab =
-                  (modelExample as HTMLElement).querySelector('div').getAttribute('data-name') === 'modelPanel';
-                if (isSchemaTab) {
-                  console.log(isSchemaTab);
-                }
-
-                observer.disconnect();
-                observer.observe(modelExample, { childList: true, subtree: false });
-              });
-              observer.observe(modelExample, { childList: true, subtree: false });
+              observer.observe(window.document.body, { childList: true, subtree: true });
             };
 
             (() => {
@@ -197,16 +189,16 @@ export const setupApp = async (app: INestApplication) => {
 
               const openedSection = window.document.querySelector('.opblock-tag-section.is-open');
               if (openedSection) {
-                filterOperations(openedSection);
-                addOperationTags(openedSection);
+                filterSectionOperations(openedSection);
+                tagSectionOperations(openedSection);
               }
 
-              const sections = window.document.getElementsByClassName('opblock-tag-section');
-              for (const section of sections) {
-                section.addEventListener('click', () => observeSection(section));
-
-                expandTypeSpoilers(section);
+              const sectionsHeaders = window.document.getElementsByClassName('opblock-tag');
+              for (const header of sectionsHeaders) {
+                header.addEventListener('click', () => handleSection(header.parentElement));
               }
+
+              expandSpoilers();
             })();
           });
         },
