@@ -132,38 +132,208 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            const extractOperationVersion = (operationId: string) => {
-              const versionRegex = /Controller([A-Za-z0-9]+)_/;
-              const version = operationId.match(versionRegex)[1];
-              const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
-              return { operationIdWithoutVersion, version };
+            type TField = {
+              name: string;
+              type: string;
             };
 
-            const tagSectionOperations = (section: Element) => {
-              const operations = section.getElementsByClassName('opblock');
-              const operationsMap = new Map<string, string[]>();
+            class Operation {
+              id: string;
+              path: string;
+              version: string;
+              color: Colors;
+              params: TField[] = [];
+              body: TField[] = [];
+              response: TField[] | string = [];
 
-              for (const operation of operations) {
-                const { operationIdWithoutVersion, version } = extractOperationVersion(operation.id);
-                if (!operationsMap.has(operationIdWithoutVersion)) {
-                  operationsMap.set(operationIdWithoutVersion, []);
+              constructor(private element: Element) {
+                this.id = this.element.id;
+                this.path = this.element.querySelector('.opblock-summary-path').querySelector('span').textContent;
+                this.version = Operation.extractVersion(this.id).version;
+              }
+
+              async initialize() {
+                await this.expand();
+                this.params = this.computeParams();
+                this.body = this.computeBody();
+                this.response = this.computeResponse();
+                this.toggle();
+              }
+
+              private computeParams() {
+                const table = this.element.querySelector('table.parameters');
+                if (!table) return [];
+                const trs = table.querySelectorAll('tr[data-param-name]');
+                const params: TField[] = Array.from(trs).map((tr) => ({
+                  name: tr.querySelector('.parameter__name').textContent,
+                  type: tr.querySelector('.parameter__type').textContent,
+                }));
+
+                return params;
+              }
+
+              private computeBody() {
+                const container = this.element.querySelector('.opblock-section-request-body');
+                if (!container) return [];
+                const spans = container.querySelectorAll('span.hljs-attr');
+
+                return this.parseJsonSpans(spans);
+              }
+
+              private computeResponse() {
+                const spans = this.element.querySelector('tr[data-code="200"]').querySelectorAll('span.hljs-attr');
+                if (!spans) return [];
+
+                return this.parseJsonSpans(spans);
+              }
+
+              private parseJsonSpans(spans: NodeListOf<Element>) {
+                const fields: TField[] = Array.from(spans).map((span) => {
+                  const name = span.textContent.trim().replace(/^"(.*)"$/, '$1');
+                  let type = span.nextElementSibling.textContent;
+
+                  const isArray = type.includes('[');
+                  if (!isArray) {
+                    type = span.nextElementSibling.nextElementSibling.textContent.replace(/^"(.*)"$/, '$1');
+                  } else {
+                    type = '';
+                    let typeSpan = span.nextElementSibling;
+                    while (typeSpan && !typeSpan.classList.contains('hljs-attr')) {
+                      if (typeSpan.textContent) {
+                        type += typeSpan.textContent.trim();
+                      }
+                      typeSpan = typeSpan.nextElementSibling;
+                    }
+                  }
+
+                  if (!isNaN(Date.parse(type))) type = 'date';
+
+                  return { name, type };
+                });
+
+                return fields;
+              }
+
+              static extractVersion(operationId: string) {
+                const versionRegex = /Controller([A-Za-z0-9]+)_/;
+                const version = operationId.match(versionRegex)[1];
+                const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
+                return { operationIdWithoutVersion, version };
+              }
+
+              private expand() {
+                return new Promise<void>((resolve) => {
+                  const observer = new MutationObserver(() => {
+                    const expandedContent = this.element.querySelector('.model-example');
+                    if (expandedContent) {
+                      observer.disconnect();
+                      resolve();
+                    }
+                  });
+                  observer.observe(this.element, { childList: true, subtree: true });
+
+                  this.toggle();
+                });
+              }
+
+              private toggle() {
+                (this.element.querySelector('button.opblock-control-arrow') as HTMLElement).click();
+              }
+
+              static compareOperations(op1: Operation, op2: Operation) {
+                const compareFieldArrays = (arr1: TField[], arr2: TField[]) => {
+                  if (arr1.length !== arr2.length) return false;
+
+                  for (let i = 0; i < arr1.length; i++) {
+                    if (arr1[i].name !== arr2[i].name || arr1[i].type !== arr2[i].type) {
+                      return false;
+                    }
+                  }
+
+                  return true;
+                };
+
+                const keys = ['params', 'body', 'response'];
+
+                return keys.every((key) => compareFieldArrays(op1[key], op2[key]));
+              }
+            }
+
+            enum Colors {
+              Green = 'green',
+              Blue = 'blue',
+              Yellow = 'yellow',
+              Purple = 'purple',
+              Cyan = 'cyan',
+              Orange = 'orange',
+              Violet = 'violet',
+              DarkGreen = 'darkgreen',
+              Pink = 'pink',
+            }
+
+            const groupOperationsById = (operations: Operation[]) => {
+              return operations.reduce(
+                (acc, operation) => {
+                  const { operationIdWithoutVersion: id } = Operation.extractVersion(operation.id);
+                  if (!acc[id]) {
+                    acc[id] = [];
+                  }
+                  acc[id].push(operation);
+                  return acc;
+                },
+                {} as Record<string, Operation[]>,
+              );
+            };
+
+            const tagSectionOperations = async (section: Element) => {
+              const opblocks = section.getElementsByClassName('opblock');
+
+              const operations = Array.from(opblocks).map((opblock) => {
+                return new Operation(opblock);
+              });
+
+              const initializationPromises = operations.map((operation) => operation.initialize());
+              await Promise.all(initializationPromises);
+
+              const groupedOperations = groupOperationsById(operations);
+
+              Object.values(groupedOperations).forEach((group) => {
+                group[0].color = Colors.Green;
+                const colors = Object.values(Colors);
+
+                for (let i = 1; i < group.length; i++) {
+                  if (!Operation.compareOperations(group[i - 1], group[i])) {
+                    group[i].color = colors[i];
+                  } else {
+                    group[i].color = group[i - 1].color;
+                  }
                 }
-                operationsMap.get(operationIdWithoutVersion).push(version.toLowerCase());
-              }
+              });
 
-              for (const operation of operations) {
-                const { operationIdWithoutVersion } = extractOperationVersion(operation.id);
-                const operationVersions = operationsMap.get(operationIdWithoutVersion);
+              Object.values(groupedOperations).forEach((group) => {
+                group.forEach((operation) => {
+                  const operationElem = window.document.getElementById(operation.id);
+                  const versions = group.map((op) => op.version);
 
-                const versionsDiv = window.document.createElement('div');
-                versionsDiv.style.marginRight = '20px';
-                versionsDiv.style.fontSize = '14px';
-                versionsDiv.innerHTML = operationVersions.join(' ');
+                  const versionsDiv = window.document.createElement('div');
+                  versionsDiv.style.display = 'flex';
+                  versionsDiv.style.gap = '3px';
+                  versionsDiv.style.margin = '0 20px';
+                  versionsDiv.style.fontSize = '14px';
 
-                const parentNode = operation.querySelector('.opblock-summary');
-                const childNode = parentNode.querySelector('.view-line-link');
-                parentNode.insertBefore(versionsDiv, childNode);
-              }
+                  versions.forEach((version, index) => {
+                    const span = window.document.createElement('span');
+                    span.textContent = version;
+                    span.style.fontSize = '14px';
+                    span.style.color = group[index].color;
+                    versionsDiv.appendChild(span);
+                  });
+
+                  const parentNode = operationElem.querySelector('.opblock-summary');
+                  const childNode = parentNode.querySelector('.view-line-link');
+                  parentNode.insertBefore(versionsDiv, childNode);
+                });
+              });
             };
 
             const expandSpoilers = () => {
