@@ -83,7 +83,7 @@ export const setupApp = async (app: INestApplication) => {
               operationId: string;
               path: string;
               type: string;
-              color: null | string;
+              color: string;
               tags: string[];
               summary: string;
               [key: string]: any;
