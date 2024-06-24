@@ -179,7 +179,7 @@ export const setupApp = async (app: INestApplication) => {
               );
             };
 
-            const deepEqual = (obj1: any, obj2: any, schemas?: object) => {
+            const deepEqual = (obj1: any, obj2: any) => {
               if (obj1 === obj2) {
                 return true;
               }
@@ -203,13 +203,13 @@ export const setupApp = async (app: INestApplication) => {
                   const trimmedRef1 = refValue1.substring(refValue1.lastIndexOf('/') + 1);
                   const trimmedRef2 = refValue2.substring(refValue2.lastIndexOf('/') + 1);
 
-                  const schema1 = schemas[trimmedRef1];
-                  const schema2 = schemas[trimmedRef2];
+                  const schema1 = API_OPERATIONS.schemas[trimmedRef1];
+                  const schema2 = API_OPERATIONS.schemas[trimmedRef2];
 
-                  if (!deepEqual(schema1, schema2, schemas)) {
+                  if (!deepEqual(schema1, schema2)) {
                     return false;
                   }
-                } else if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key], schemas)) {
+                } else if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
                   return false;
                 }
               }
@@ -244,7 +244,7 @@ export const setupApp = async (app: INestApplication) => {
                     Object.entries(group[i]).filter(([key]) => !excludedKeys.includes(key)),
                   );
 
-                  if (!deepEqual(prevOperation, currOperation, API_OPERATIONS.schemas)) {
+                  if (!deepEqual(prevOperation, currOperation)) {
                     colorIndex++;
                   }
                   group[i].color = COLORS[colorIndex];
