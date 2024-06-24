@@ -63,6 +63,32 @@ export const setupApp = async (app: INestApplication) => {
         docExpansion: 'none',
         onComplete: () => {
           setTimeout(() => {
+            const API = JSON.parse((window as any).ui.spec()._root.entries[0][1]);
+            const API_OPERATIONS = { paths: API.paths, schemas: API.components.schemas };
+
+            const COLORS = [
+              'green',
+              'blue',
+              '#E3651D',
+              '#750E21',
+              '#03C4A1',
+              '#008170',
+              '#610C9F',
+              '#DA0C81',
+              '#B0A565',
+              'black',
+            ];
+
+            type TOperation = {
+              operationId: string;
+              path: string;
+              type: string;
+              color: null | string;
+              tags: string[];
+              summary: string;
+              [key: string]: any;
+            };
+
             const mountSelector = () => {
               const topBarWrapper = window.document.querySelector('.topbar-wrapper');
 
@@ -132,188 +158,108 @@ export const setupApp = async (app: INestApplication) => {
               }
             };
 
-            type TField = {
-              name: string;
-              type: string;
+            const extractOperationVersion = (operationId: string) => {
+              const versionRegex = /Controller([A-Za-z0-9]+)_/;
+              const version = operationId.match(versionRegex)[1];
+              const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
+              return { operationIdWithoutVersion, version };
             };
 
-            class Operation {
-              id: string;
-              path: string;
-              version: string;
-              color: Colors;
-              params: TField[] = [];
-              body: TField[] = [];
-              response: TField[] | string = [];
-
-              constructor(private element: Element) {
-                this.id = this.element.id;
-                this.path = this.element.querySelector('.opblock-summary-path').querySelector('span').textContent;
-                this.version = Operation.extractVersion(this.id).version;
-              }
-
-              async initialize() {
-                await this.expand();
-                this.params = this.computeParams();
-                this.body = this.computeBody();
-                this.response = this.computeResponse();
-                this.toggle();
-              }
-
-              private computeParams() {
-                const table = this.element.querySelector('table.parameters');
-                if (!table) return [];
-                const trs = table.querySelectorAll('tr[data-param-name]');
-                const params: TField[] = Array.from(trs).map((tr) => ({
-                  name: tr.querySelector('.parameter__name').textContent,
-                  type: tr.querySelector('.parameter__type').textContent,
-                }));
-
-                return params;
-              }
-
-              private computeBody() {
-                const container = this.element.querySelector('.opblock-section-request-body');
-                if (!container) return [];
-                const spans = container.querySelectorAll('span.hljs-attr');
-
-                return this.parseJsonSpans(spans);
-              }
-
-              private computeResponse() {
-                const spans = this.element.querySelector('tr[data-code="200"]').querySelectorAll('span.hljs-attr');
-                if (!spans) return [];
-
-                return this.parseJsonSpans(spans);
-              }
-
-              private parseJsonSpans(spans: NodeListOf<Element>) {
-                const fields: TField[] = Array.from(spans).map((span) => {
-                  const name = span.textContent.trim().replace(/^"(.*)"$/, '$1');
-                  let type = span.nextElementSibling.textContent;
-
-                  const isArray = type.includes('[');
-                  if (!isArray) {
-                    type = span.nextElementSibling.nextElementSibling.textContent.replace(/^"(.*)"$/, '$1');
-                  } else {
-                    type = '';
-                    let typeSpan = span.nextElementSibling;
-                    while (typeSpan && !typeSpan.classList.contains('hljs-attr')) {
-                      if (typeSpan.textContent) {
-                        type += typeSpan.textContent.trim();
-                      }
-                      typeSpan = typeSpan.nextElementSibling;
-                    }
-                  }
-
-                  if (!isNaN(Date.parse(type))) type = 'date';
-
-                  return { name, type };
-                });
-
-                return fields;
-              }
-
-              static extractVersion(operationId: string) {
-                const versionRegex = /Controller([A-Za-z0-9]+)_/;
-                const version = operationId.match(versionRegex)[1];
-                const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
-                return { operationIdWithoutVersion, version };
-              }
-
-              private expand() {
-                return new Promise<void>((resolve) => {
-                  const observer = new MutationObserver(() => {
-                    const expandedContent = this.element.querySelector('.model-example');
-                    if (expandedContent) {
-                      observer.disconnect();
-                      resolve();
-                    }
-                  });
-                  observer.observe(this.element, { childList: true, subtree: true });
-
-                  this.toggle();
-                });
-              }
-
-              private toggle() {
-                (this.element.querySelector('button.opblock-control-arrow') as HTMLElement).click();
-              }
-
-              static compareOperations(op1: Operation, op2: Operation) {
-                const compareFieldArrays = (arr1: TField[], arr2: TField[]) => {
-                  if (arr1.length !== arr2.length) return false;
-
-                  for (let i = 0; i < arr1.length; i++) {
-                    if (arr1[i].name !== arr2[i].name || arr1[i].type !== arr2[i].type) {
-                      return false;
-                    }
-                  }
-
-                  return true;
-                };
-
-                const keys = ['params', 'body', 'response'];
-
-                return keys.every((key) => compareFieldArrays(op1[key], op2[key]));
-              }
-            }
-
-            enum Colors {
-              Green = 'green',
-              Blue = 'blue',
-              Yellow = 'yellow',
-              Purple = 'purple',
-              Cyan = 'cyan',
-              Orange = 'orange',
-              Violet = 'violet',
-              DarkGreen = 'darkgreen',
-              Pink = 'pink',
-            }
-
-            const groupOperationsById = (operations: Operation[]) => {
+            const groupOperationsById = (operations: TOperation[]) => {
               return operations.reduce(
                 (acc, operation) => {
-                  const { operationIdWithoutVersion: id } = Operation.extractVersion(operation.id);
+                  const { operationIdWithoutVersion: id } = extractOperationVersion(operation.operationId);
                   if (!acc[id]) {
                     acc[id] = [];
                   }
                   acc[id].push(operation);
                   return acc;
                 },
-                {} as Record<string, Operation[]>,
+                {} as Record<string, TOperation[]>,
               );
             };
 
-            const tagSectionOperations = async (section: Element) => {
-              const opblocks = section.getElementsByClassName('opblock');
+            const deepEqual = (obj1: any, obj2: any, schemas?: object) => {
+              if (obj1 === obj2) {
+                return true;
+              }
 
-              const operations = Array.from(opblocks).map((opblock) => {
-                return new Operation(opblock);
-              });
+              if (obj1 == null || obj2 == null || typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+                return false;
+              }
 
-              const initializationPromises = operations.map((operation) => operation.initialize());
-              await Promise.all(initializationPromises);
+              const keys1 = Object.keys(obj1);
+              const keys2 = Object.keys(obj2);
+
+              if (keys1.length !== keys2.length) {
+                return false;
+              }
+
+              for (const key of keys1) {
+                if (key === '$ref') {
+                  const refValue1 = obj1[key];
+                  const refValue2 = obj2[key];
+
+                  const trimmedRef1 = refValue1.substring(refValue1.lastIndexOf('/') + 1);
+                  const trimmedRef2 = refValue2.substring(refValue2.lastIndexOf('/') + 1);
+
+                  const schema1 = schemas[trimmedRef1];
+                  const schema2 = schemas[trimmedRef2];
+
+                  if (!deepEqual(schema1, schema2, schemas)) {
+                    return false;
+                  }
+                } else if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key], schemas)) {
+                  return false;
+                }
+              }
+
+              return true;
+            };
+
+            const tagSectionOperations = (section: Element) => {
+              const operations = Object.entries(API_OPERATIONS.paths)
+                .flatMap(([path, operations]) =>
+                  Object.entries(operations).map(([type, operation]) => ({
+                    ...(operation as TOperation),
+                    path,
+                    type,
+                  })),
+                )
+                .filter((operation) => operation.tags.includes(section.querySelector('h3').getAttribute('data-tag')));
 
               const groupedOperations = groupOperationsById(operations);
 
               Object.values(groupedOperations).forEach((group) => {
-                group[0].color = Colors.Green;
-                const colors = Object.values(Colors);
+                let colorIndex = 0;
+                group[0].color = COLORS[colorIndex];
+                const excludedKeys = ['operationId', 'color', 'path'];
 
                 for (let i = 1; i < group.length; i++) {
-                  if (!Operation.compareOperations(group[i - 1], group[i])) {
-                    group[i].color = colors[i];
-                  } else {
-                    group[i].color = group[i - 1].color;
+                  const prevOperation = Object.fromEntries(
+                    Object.entries(group[i - 1]).filter(([key]) => !excludedKeys.includes(key)),
+                  );
+
+                  const currOperation = Object.fromEntries(
+                    Object.entries(group[i]).filter(([key]) => !excludedKeys.includes(key)),
+                  );
+
+                  if (!deepEqual(prevOperation, currOperation, API_OPERATIONS.schemas)) {
+                    colorIndex++;
                   }
+                  group[i].color = COLORS[colorIndex];
                 }
               });
 
               Object.values(groupedOperations).forEach((group) => {
                 group.forEach((operation) => {
-                  const operationElem = window.document.getElementById(operation.id);
-                  const versions = group.map((op) => op.version);
+                  const operationElem = Array.from(section.querySelectorAll('.opblock')).find(
+                    (opblock) =>
+                      opblock.querySelector(`span[data-path="${operation.path}"]`) &&
+                      Array.from(opblock.querySelectorAll('span')).some(
+                        (span) => span.textContent === operation.type.toUpperCase(),
+                      ),
+                  );
 
                   const versionsDiv = window.document.createElement('div');
                   versionsDiv.style.display = 'flex';
@@ -321,11 +267,11 @@ export const setupApp = async (app: INestApplication) => {
                   versionsDiv.style.margin = '0 20px';
                   versionsDiv.style.fontSize = '14px';
 
-                  versions.forEach((version, index) => {
+                  group.forEach((operation) => {
                     const span = window.document.createElement('span');
-                    span.textContent = version;
+                    span.textContent = extractOperationVersion(operation.operationId).version;
                     span.style.fontSize = '14px';
-                    span.style.color = group[index].color;
+                    span.style.color = operation.color;
                     versionsDiv.appendChild(span);
                   });
 
