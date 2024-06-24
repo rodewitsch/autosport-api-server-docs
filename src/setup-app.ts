@@ -64,7 +64,10 @@ export const setupApp = async (app: INestApplication) => {
         onComplete: () => {
           setTimeout(() => {
             const API = JSON.parse((window as any).ui.spec()._root.entries[0][1]);
-            const API_OPERATIONS = { paths: API.paths, schemas: API.components.schemas };
+            const API_OPERATIONS = {
+              paths: API.paths as object,
+              schemas: API.components.schemas as object,
+            };
 
             const COLORS = [
               'green',
@@ -118,8 +121,8 @@ export const setupApp = async (app: INestApplication) => {
                 localStorage.setItem('apiVersion', apiVersionSelector.value);
               });
 
-              topBarWrapper.appendChild(label);
-              topBarWrapper.appendChild(apiVersionSelector);
+              topBarWrapper?.appendChild(label);
+              topBarWrapper?.appendChild(apiVersionSelector);
             };
 
             const shouldHideOperation = (operationId: string, apiVersion: string) => {
@@ -160,7 +163,7 @@ export const setupApp = async (app: INestApplication) => {
 
             const extractOperationVersion = (operationId: string) => {
               const versionRegex = /Controller([A-Za-z0-9]+)_/;
-              const version = operationId.match(versionRegex)[1];
+              const version = (operationId.match(versionRegex) as RegExpMatchArray)[1];
               const operationIdWithoutVersion = operationId.replace(`Controller${version}_`, 'Controller_');
               return { operationIdWithoutVersion, version };
             };
@@ -226,7 +229,10 @@ export const setupApp = async (app: INestApplication) => {
                     type,
                   })),
                 )
-                .filter((operation) => operation.tags.includes(section.querySelector('h3').getAttribute('data-tag')));
+                .filter((operation) => {
+                  const tag = section.querySelector('h3')?.getAttribute('data-tag');
+                  return tag && operation.tags.includes(tag);
+                });
 
               const groupedOperations = groupOperationsById(operations);
 
@@ -275,9 +281,9 @@ export const setupApp = async (app: INestApplication) => {
                     versionsDiv.appendChild(span);
                   });
 
-                  const parentNode = operationElem.querySelector('.opblock-summary');
-                  const childNode = parentNode.querySelector('.view-line-link');
-                  parentNode.insertBefore(versionsDiv, childNode);
+                  const parentNode = operationElem?.querySelector('.opblock-summary');
+                  const childNode = parentNode?.querySelector('.view-line-link');
+                  if (childNode) parentNode?.insertBefore(versionsDiv, childNode);
                 });
               });
             };
@@ -311,7 +317,7 @@ export const setupApp = async (app: INestApplication) => {
 
               const sectionsHeaders = window.document.getElementsByClassName('opblock-tag');
               for (const header of sectionsHeaders) {
-                header.addEventListener('click', () => handleSection(header.parentElement));
+                header.addEventListener('click', () => handleSection(header.parentElement as HTMLElement));
               }
 
               expandSpoilers();
