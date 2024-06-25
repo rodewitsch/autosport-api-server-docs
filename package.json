@@ -55,6 +55,7 @@
     "rimraf": "^5.0.1",
     "rxjs": "^7.8.1",
     "sharp": "^0.32.6",
+    "swagger-ui-customization": "^1.0.4",
     "swagger-ui-express": "^5.0.0",
     "ua-parser-js": "^1.0.37",
     "unp-validator": "^1.1.0",
