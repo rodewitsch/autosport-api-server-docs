@@ -62,12 +62,7 @@ export const setupApp = async (app: INestApplication) => {
       swaggerOptions: {
         persistAuthorization: true,
         docExpansion: 'none',
-        versions: {
-          '-': '',
-          '1': 'V1',
-          '2': 'V2',
-          '3': 'V3',
-        },
+        versions: [1, 2, 3],
         onComplete: setupSwaggerCustomization,
       },
     });
